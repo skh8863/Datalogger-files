@@ -1,86 +1,57 @@
 """
-This program was written as a diagnostic of the Raspberry Pi's file-writing 
-speed to determine the rate at which data could be taken from a sensor and
-then written to a file. The program first calculates the first 10 factors of 2
-and writes them to a file 100 times, then does the same for the first 100
-factors and then the first 1000 factors. Each time the factors are calculated
-and written to the file, the program deletes the file and creates it again when
-writing to it in order to determine the impact on runtime of creating, opening,
-and closing a file. The time taken to open, write, and close the file is
-appended to a list whose mean is calculated and printed in milliseconds.
+A second version of writespeed.py. This was created in an attempt to eliminate
+any repetition by using a for loop to iterate over the different number of
+factors of 2 instead of writing out the same code three times.
 
 """
 
 import os
-import time
+import datetime
 import numpy as np
+import csv
 
 list10 = []
 list100 = []
 list1000 = []
+
 for j in range(100):
+    
+    datalist = []
     try:
-        os.remove('test.txt')
+        os.remove('test.csv')
     except OSError:
         pass
 
-    start = time.time()
-    with open("test.txt", 'w+') as f:
+    for k in range(3):
+        for i in range(10**(k+1)):
+            x = 2*i
+            datalist.append(x)
 
-	    for i in range(10):
-	        x = 2*i
-	        x = str(x)
-	        f.write(x)
-    
-	    f.close()
-    
-	    end = time.time()
-	    diff = (end-start)*1000000
-	    diff = int(diff)
-	    list10.append(diff)
+        start = datetime.datetime.now()
 
-for j in range(100):
-    try:
-        os.remove('test.txt')
-    except OSError:
-        pass
+        with open('test.csv', 'w+') as f:
+            writer = csv.writer(f)
+            writer.writerow(datalist)
 
-    start = time.time()
-    with open("test.txt", 'w+') as f:
+        f.close()
 
-	    for i in range(100):
-	        x = 2*i
-	        x = str(x)
-	        f.write(x)
-    
-	    f.close()
-    
-	    end = time.time()
-	    diff = (end-start)*1000000
-	    diff = int(diff)
-	    list100.append(diff)
+        end = datetime.datetime.now()
+        diff = (end-start)
 
-for j in range(100):
-    try:
-        os.remove('test.txt')
-    except OSError:
-        pass
+        if k == 0:
+            list10.append(diff.microseconds)
+        elif k == 1:
+            list100.append(diff.microseconds)
+        elif k == 2:
+            list1000.append(diff.microseconds)
 
-    start = time.time()
-    with open("test.txt", 'w+') as f:
+meantime10 = np.mean(list10)
+meantime10 = meantime10/1000
+meantime100 = np.mean(list100)
+meantime100 = meantime100/1000
+meantime1000 = np.mean(list1000)
+meantime1000 = meantime1000/1000
 
-	    for i in range(1000):
-	        x = 2*i
-	        x = str(x)
-	        f.write(x)
-    
-	    f.close()
-    
-	    end = time.time()
-	    diff = (end-start)*1000000
-	    diff = int(diff)
-	    list1000.append(diff)
-    
-print(np.mean(list10))
-print(np.mean(list100))
-print(np.mean(list1000))
+print(str(meantime10)+' ms')
+print(str(meantime100)+' ms')
+print(str(meantime1000)+' ms')
